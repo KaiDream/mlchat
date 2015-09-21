@@ -52,59 +52,30 @@ class MLChat {
         $this->sigInit();
         set_time_limit(0);
         $this->initFifoHandlers();
-        $ircStart = pcntl_fork();
-        $bbsStart = pcntl_fork();
-
-        if($bbsStart == 0 && $ircStart != 0) {
-            $mlbot = new MLChat();
-            $mlbot->bbsProcess();
+	$this->ircInit();
+	$this->ircConnect();
+	$this->bbsInit();
+        $ircClient = pcntl_fork();
+        $bbsReader = pcntl_fork();
+	$bbsClient = pcntl_fork();
+        $ircReader = pcntl_fork();
+        
+	if($ircClient != 0 && $bbsClient == 0 && $ircReader == 0 && $bbsReader == 0) {
+	    $this->bbsSocketWriteIrcFifoRead();
             exit (0);
-        }else if($ircStart == 0 && $bbsStart != 0) {
-            $mlbot = new MLChat();
-            $mlbot->ircProcess();
+        }else if($ircClient == 0 && $bbsClient != 0 && $ircReader == 0 && $bbsReader == 0) {
+	    $this->ircSocketWriteBBSFifoRead();
+            exit (0);
+        }else if($ircClient == 0 && $bbsClient == 0 && $ircReader != 0 && $bbsReader == 0) {
+	    $this->bbsSocketReadBbsFifoWrite();
+            exit (0);
+        }else if($ircClient == 0 && $bbsClient == 0 && $ircReader == 0 && $bbsReader != 0) {
+	    $this->ircSocketReadIrcFifoWrite();
             exit (0);
         }
-        if($ircStart != 0 && $bbsStart != 0) {
+
+        if($ircClient != 0 && $bbsClient != 0 && $ircReader != 0 && $bbsReader != 0) {
             while(1) { sleep(5); }
-        }
-    }
-
-    public function ircProcess() {
-        $this->sigInit();
-        if ($this->ircInit()) {
-            $this->ircConnect();
-            $ircClient = pcntl_fork();
-            $bbsReader = pcntl_fork();
-
-            if($ircClient == 0 && $bbsReader != 0) {
-                $this->ircSocketReadIrcFifoWrite();
-                exit (0);
-            } else if($bbsReader == 0 && $ircClient != 0) {
-                $this->bbsSocketWriteIrcFifoRead();
-                exit (0);
-            }
-            if($ircClient != 0 && $bbsReader != 0) {
-                while(1) { sleep(5); }
-            }
-        }
-    }
-
-    public function bbsProcess() {
-        $this->sigInit();
-        if ($this->bbsInit()) {
-            $bbsClient = pcntl_fork();
-            $ircReader = pcntl_fork();
-
-            if($bbsClient == 0 && $ircReader != 0) {
-                $this->bbsSocketReadBbsFifoWrite();
-                exit (0);
-            } else if($ircReader == 0 && $bbsClient != 0) {
-                $this->ircSocketWriteBBSFifoRead();
-                exit (0);
-            }
-            if($bbsClient != 0 && $ircReader != 0) {
-                while(1) { sleep(5); }
-            }
         }
     }
 
