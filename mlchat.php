@@ -1,5 +1,6 @@
+#!/usr/bin/php
 <?php
-//declare(ticks = 1);
+declare(ticks = 1);
 class MLChat {
 
     const MSG_PRIVATE = "#";
@@ -323,7 +324,8 @@ class MLChat {
     }
 
     protected function sigInit() {
-        pcntl_signal(SIGTERM, "MLChat::sigHandle");
+        pcntl_signal(SIGUSR1, "MLChat::sigHandle");
+	pcntl_signal(SIGTERM, "MLChat::sigHandle");
         pcntl_signal(SIGINT, "MLChat::sigHandle");
     }
 
@@ -335,6 +337,7 @@ class MLChat {
             case SIGTERM:
             case SIGKILL:
             case SIGINT:
+	    case SIGUSR1:
                 exit;
         }
         return true;
