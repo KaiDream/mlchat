@@ -49,28 +49,28 @@ class MLChat {
      * Fork IRC/BBS Process
      */
     public function run() {
-        $this->sigInit();
         set_time_limit(0);
+        $this->sigInit();
         $this->initFifoHandlers();
-	$this->ircInit();
-	$this->ircConnect();
-	$this->bbsInit();
+	    $this->ircInit();
+	    $this->ircConnect();
+	    $this->bbsInit();
         $ircClient = pcntl_fork();
         $bbsReader = pcntl_fork();
-	$bbsClient = pcntl_fork();
+	    $bbsClient = pcntl_fork();
         $ircReader = pcntl_fork();
         
-	if($ircClient != 0 && $bbsClient == 0 && $ircReader == 0 && $bbsReader == 0) {
-	    $this->bbsSocketWriteIrcFifoRead();
+	    if($ircClient != 0 && $bbsClient == 0 && $ircReader == 0 && $bbsReader == 0) {
+	        $this->bbsSocketWriteIrcFifoRead();
             exit (0);
         }else if($ircClient == 0 && $bbsClient != 0 && $ircReader == 0 && $bbsReader == 0) {
-	    $this->ircSocketWriteBBSFifoRead();
+	        $this->ircSocketWriteBBSFifoRead();
             exit (0);
         }else if($ircClient == 0 && $bbsClient == 0 && $ircReader != 0 && $bbsReader == 0) {
-	    $this->bbsSocketReadBbsFifoWrite();
+	        $this->bbsSocketReadBbsFifoWrite();
             exit (0);
         }else if($ircClient == 0 && $bbsClient == 0 && $ircReader == 0 && $bbsReader != 0) {
-	    $this->ircSocketReadIrcFifoWrite();
+	        $this->ircSocketReadIrcFifoWrite();
             exit (0);
         }
 
@@ -125,7 +125,6 @@ class MLChat {
 
     protected function bbsInit() {
         $result = false;
-        set_time_limit(0);
         $this->bbsSocket = fsockopen($this->bbsServer, $this->bbsPort, $eN, $eS);
         stream_set_blocking($this->bbsSocket,0);
         if($this->bbsSocket) {
@@ -296,7 +295,7 @@ class MLChat {
 
     protected function sigInit() {
         pcntl_signal(SIGUSR1, "MLChat::sigHandle");
-	pcntl_signal(SIGTERM, "MLChat::sigHandle");
+	    pcntl_signal(SIGTERM, "MLChat::sigHandle");
         pcntl_signal(SIGINT, "MLChat::sigHandle");
     }
 
